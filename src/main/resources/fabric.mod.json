@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "cfms_f",
+  "version": "${version}",
+  "name": "Child Folder Mod Scanner Fabric",
+  "description": "wow!",
+  "authors": [],
+  "contact": {},
+  "license": "GPL-3.0",
+  "environment": "*",
+  "entrypoints": {},
+  "languageAdapters": {
+    "cfms_f": "cn.ksmcbrigade.cfmsF.LocatorAdapter"
+  },
+  "mixins": [
+    "cfms_f.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": "*"
+  }
+}
