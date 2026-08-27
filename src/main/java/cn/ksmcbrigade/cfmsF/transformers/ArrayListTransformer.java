@@ -2,72 +2,57 @@ package cn.ksmcbrigade.cfmsF.transformers;
 
 import net.fabricmc.loader.impl.util.log.Log;
 import net.fabricmc.loader.impl.util.log.LogCategory;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
 
 public class ArrayListTransformer implements ClassFileTransformer {
 
-    public static byte[] buffers = null;
+    private static boolean transformed = false;
 
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain, byte[] classfileBuffer) {
-        if (!"java/util/ArrayList$Itr".equals(className)) {
+        if (!"java/util/ArrayList$Itr".equals(className)) return classfileBuffer;
+
+        if (transformed) return classfileBuffer;
+
+        Log.warn(LogCategory.GAME_PATCH, "Transforming " + className);
+
+        try {
+            ClassReader reader = new ClassReader(classfileBuffer);
+            ClassNode classNode = new ClassNode(Opcodes.ASM9);
+            reader.accept(classNode, 0);
+
+            for (MethodNode method : classNode.methods) {
+                if ("checkForComodification".equals(method.name) && "()V".equals(method.desc)) {
+                    InsnList newInstructions = new InsnList();
+                    newInstructions.add(new InsnNode(Opcodes.RETURN));
+                    method.instructions = newInstructions;
+                    method.localVariables = null;
+                    method.tryCatchBlocks = null;
+                    break;
+                }
+            }
+
+            ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+            classNode.accept(writer);
+            byte[] result = writer.toByteArray();
+
+            transformed = true;
+            Log.warn(LogCategory.GAME_PATCH, "Transformed " + className);
+            return result;
+        } catch (Throwable t) {
+            t.printStackTrace(System.err);
+            Log.error(LogCategory.GAME_PATCH, "Failed to transform " + className, t);
             return classfileBuffer;
         }
-
-        int asmApi = Opcodes.ASM9;
-        try {
-            if(Integer.parseInt((String) System.getProperties().getOrDefault("java.specification.version","11"))>=25){
-                asmApi = Opcodes.ASM10_EXPERIMENTAL;
-            }
-        } catch (Throwable e) {
-            Log.error(LogCategory.GAME_PATCH,"Failed to parse ASM version.Using ASM9.");
-        }
-
-        if(buffers==null){
-            buffers = classfileBuffer;
-        }
-        else{
-            Log.warn(LogCategory.GAME_PATCH,"Restoring " + className);
-            return buffers;
-        }
-
-        Log.warn(LogCategory.GAME_PATCH,"Transforming " + className);
-        ClassReader reader = new ClassReader(classfileBuffer);
-        ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
-        ClassVisitor visitor = getClassVisitor(asmApi, writer);
-        reader.accept(visitor, 0);
-        Log.warn(LogCategory.GAME_PATCH,"Transformed " + className);
-        return writer.toByteArray();
-    }
-
-    private static @NotNull ClassVisitor getClassVisitor(int asmApi, ClassWriter writer) {
-        return new ClassVisitor(asmApi, writer) {
-            @Override
-            public MethodVisitor visitMethod(int access, String name, String descriptor,
-                                             String signature, String[] exceptions) {
-                MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-                if ("checkForComodification".equals(name) && "()V".equals(descriptor)) {
-                    return new MethodVisitor(asmApi, mv) {
-                        @Override
-                        public void visitCode() {
-                            mv.visitCode();
-                            mv.visitInsn(Opcodes.RETURN);
-                            mv.visitMaxs(0, 0);
-                            mv.visitEnd();
-                        }
-                    };
-                }
-                return mv;
-            }
-        };
     }
 }

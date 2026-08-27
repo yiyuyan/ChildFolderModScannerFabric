@@ -2,7 +2,6 @@
   "required": true,
   "package": "cn.ksmcbrigade.cfmsF.mixin",
   "compatibilityLevel": "JAVA_8",
-  "plugin": "cn.ksmcbrigade.cfmsF.mixin.CFMSfPlugin",
   "mixins": [],
   "client": [],
   "server": [],
