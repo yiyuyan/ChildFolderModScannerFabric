@@ -93,7 +93,7 @@ public class LocatorAdapter implements LanguageAdapter{
             //modify ArrayList(force)
 
             Instrumentation instrumentation = AgentUtils.injectTmpAgent();
-            ClassFileTransformer transformer = new ArrayListTransformer();
+            ClassFileTransformer transformer = new ArrayListTransformer(false);
             instrumentation.addTransformer(transformer,true);
             instrumentation.retransformClasses(Class.forName("java.util.ArrayList$Itr"));
             instrumentation.removeTransformer(transformer);

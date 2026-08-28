@@ -15,7 +15,14 @@ import java.security.ProtectionDomain;
 
 public class ArrayListTransformer implements ClassFileTransformer {
 
-    private static boolean transformed = false;
+    public static boolean transformed = false;
+    public static byte[] bytes = null;
+
+    public boolean restore;
+
+    public ArrayListTransformer(boolean restore){
+        this.restore = restore;
+    }
 
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
@@ -25,6 +32,14 @@ public class ArrayListTransformer implements ClassFileTransformer {
         if (transformed) return classfileBuffer;
 
         Log.warn(LogCategory.GAME_PATCH, "Transforming " + className);
+
+        if(restore && bytes!=null){
+            Log.warn(LogCategory.GAME_PATCH,"Restored "+className);
+            transformed = true;
+            return bytes;
+        }
+
+        bytes = classfileBuffer;
 
         try {
             ClassReader reader = new ClassReader(classfileBuffer);
