@@ -6,7 +6,9 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.LanguageAdapter;
 import net.fabricmc.loader.api.LanguageAdapterException;
 import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.metadata.ModDependency;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
+import net.fabricmc.loader.impl.ModContainerImpl;
 import net.fabricmc.loader.impl.discovery.ModCandidateImpl;
 import net.fabricmc.loader.impl.discovery.ModDiscoverer;
 import net.fabricmc.loader.impl.discovery.RuntimeModRemapper;
@@ -88,13 +90,6 @@ public class LocatorAdapter implements LanguageAdapter{
                 }
             }
 
-            //add mods into path
-
-            for (ModCandidateImpl modCandidate : modCandidates) {
-                if(!modCandidate.hasPath()) continue;
-                modCandidate.getPaths().forEach(FabricLauncherBase.getLauncher()::addToClassPath);
-            }
-
             //modify ArrayList(force)
 
             Instrumentation instrumentation = AgentUtils.injectTmpAgent();
@@ -116,7 +111,11 @@ public class LocatorAdapter implements LanguageAdapter{
                 }
 
                 addModM.invoke(loader,mod);
+
+                addIntoPath(loader,mod);
             }
+
+
 
             Log.info(LogCategory.DISCOVERY,"CFMSf Language Adapter End!");
         } catch (Throwable e) {
@@ -128,6 +127,19 @@ public class LocatorAdapter implements LanguageAdapter{
                 Log.error(LogCategory.LOG,"Failed to freeze fabric loader!",e);
             }
         }
+    }
+
+    private static void addIntoPath(FabricLoaderImpl loader, ModCandidateImpl mod) {
+        ModContainerImpl container = getMod(loader,mod);
+        if (!container.getMetadata().getId().equals(FabricLoaderImpl.MOD_ID) && !container.getMetadata().getType().equals("builtin")) {
+            for (Path path : container.getCodeSourcePaths()) {
+                FabricLauncherBase.getLauncher().addToClassPath(path);
+            }
+        }
+    }
+
+    public static ModContainerImpl getMod(FabricLoaderImpl loader,ModCandidateImpl candidate){
+        return loader.getModsInternal().stream().filter(f->f.getMetadata().getId().equals(candidate.getMetadata().getId())).findFirst().orElseThrow();
     }
 
     private static Path getModsDirectory(FabricLoader loader) {

@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Child_Folder_Mod_Scanner_Fabric.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Child_Folder_Mod_Scanner_Fabric.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Child_Folder_Mod_Scanner_Fabric.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Child_Folder_Mod_Scanner_Fabric.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ChildFolderModScannerFabric.main.iml" filepath="$PROJECT_DIR$/.idea/modules/ChildFolderModScannerFabric.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ChildFolderModScannerFabric.test.iml" filepath="$PROJECT_DIR$/.idea/modules/ChildFolderModScannerFabric.test.iml" />
     </modules>
   </component>
 </project>
